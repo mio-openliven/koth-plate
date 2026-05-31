@@ -66,7 +66,7 @@ settings:
       # Particles played around the player after a successful capture.
       enabled: true
       particle: VILLAGER_HAPPY
-      count: 28
+      count: 7
       offset-x: 0.6
       offset-y: 0.9
       offset-z: 0.6
@@ -77,7 +77,7 @@ settings:
       # died, quit, switched to Creative/Spectator, or schedule became inactive.
       enabled: true
       particle: SMOKE_NORMAL
-      count: 18
+      count: 9
       offset-x: 0.45
       offset-y: 0.45
       offset-z: 0.45
