@@ -7,6 +7,7 @@ public record PluginSettings(
         String language,
         int captureSeconds,
         double rewardAmount,
+        boolean respectCancelledPhysicalEvents,
         ScheduleSettings schedule,
         BlockPosition platePosition
 ) {

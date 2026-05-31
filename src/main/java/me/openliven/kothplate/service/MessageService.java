@@ -1,6 +1,7 @@
 package me.openliven.kothplate.service;
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -10,6 +11,8 @@ import java.io.File;
 import java.util.Locale;
 
 public final class MessageService {
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+
     private final JavaPlugin plugin;
     private YamlConfiguration activeMessages;
     private YamlConfiguration fallbackMessages;
@@ -48,11 +51,15 @@ public final class MessageService {
         player.sendActionBar(message(key, replacements));
     }
 
-    private String messageWithPrefix(String key, String... replacements) {
-        return message("prefix") + message(key, replacements);
+    private Component messageWithPrefix(String key, String... replacements) {
+        return message("prefix").append(message(key, replacements));
     }
 
-    private String message(String key, String... replacements) {
+    private Component message(String key, String... replacements) {
+        return LEGACY.deserialize(rawMessage(key, replacements));
+    }
+
+    private String rawMessage(String key, String... replacements) {
         String value = activeMessages == null ? null : activeMessages.getString(key);
         if (value == null && fallbackMessages != null) {
             value = fallbackMessages.getString(key);
@@ -63,6 +70,6 @@ public final class MessageService {
         for (int index = 0; index + 1 < replacements.length; index += 2) {
             value = value.replace(replacements[index], replacements[index + 1]);
         }
-        return ChatColor.translateAlternateColorCodes('&', value);
+        return value;
     }
 }

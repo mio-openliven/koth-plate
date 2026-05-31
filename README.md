@@ -27,7 +27,7 @@ Permission: `koth.admin` (default: op)
 .\mvnw.cmd package
 ```
 
-The plugin jar will be created in `target/koth-plate-1.0.0.jar`.
+The plugin jar will be created in `target/king-of-the-hill-1.0.1.jar`.
 
 ## Configuration
 
@@ -36,6 +36,7 @@ settings:
   language: ru
   capture-time: 20
   reward-amount: 25.0
+  respect-cancelled-physical-events: false
   schedule:
     enabled: false
     timezone: Europe/Berlin

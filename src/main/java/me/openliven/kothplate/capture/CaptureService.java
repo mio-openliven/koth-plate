@@ -3,8 +3,10 @@ package me.openliven.kothplate.capture;
 import me.openliven.kothplate.config.PluginSettings;
 import me.openliven.kothplate.plate.PlateService;
 import me.openliven.kothplate.schedule.ScheduleService;
+import me.openliven.kothplate.service.EconomyDepositResult;
 import me.openliven.kothplate.service.EconomyService;
 import me.openliven.kothplate.service.MessageService;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
@@ -67,7 +69,17 @@ public final class CaptureService {
         }
     }
 
+    public void cancelIfActive(Player player, boolean notify) {
+        if (activePlayerId != null && activePlayerId.equals(player.getUniqueId())) {
+            cancelActiveCapture(notify, player);
+        }
+    }
+
     public void cancelActiveCapture(boolean notify) {
+        cancelActiveCapture(notify, null);
+    }
+
+    private void cancelActiveCapture(boolean notify, Player knownPlayer) {
         UUID cancelledPlayerId = activePlayerId;
         if (activeTask != null) {
             activeTask.cancel();
@@ -76,11 +88,13 @@ public final class CaptureService {
         activePlayerId = null;
         progress.reset(settings == null ? 20 : settings.captureSeconds());
 
-        if (notify && cancelledPlayerId != null) {
-            Player player = Bukkit.getPlayer(cancelledPlayerId);
-            if (player != null) {
+        if (cancelledPlayerId != null) {
+            Player player = knownPlayer == null ? Bukkit.getPlayer(cancelledPlayerId) : knownPlayer;
+            if (player != null && player.isOnline()) {
+                player.sendActionBar(Component.empty());
+            }
+            if (notify && player != null && player.isOnline()) {
                 messages.send(player, "capture-cancelled");
-                player.sendActionBar(" ");
             }
         }
     }
@@ -101,7 +115,13 @@ public final class CaptureService {
         messages.action(player, "actionbar-timer", "%time%", Integer.toString(tick.displayedSeconds()));
 
         if (tick.completed()) {
-            economy.deposit(player, settings.rewardAmount());
+            EconomyDepositResult deposit = economy.deposit(player, settings.rewardAmount());
+            if (!deposit.successful()) {
+                plugin.getLogger().warning("Failed to pay KoTH reward to " + player.getName() + ": " + deposit.errorMessage());
+                messages.send(player, "reward-failed");
+                cancelActiveCapture(false, player);
+                return;
+            }
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
             messages.send(player, "reward-given",
                     "%time%", Integer.toString(settings.captureSeconds()),

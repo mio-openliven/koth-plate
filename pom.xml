@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>me.openliven</groupId>
-    <artifactId>koth-plate</artifactId>
-    <version>1.0.0</version>
+    <artifactId>king-of-the-hill</artifactId>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
-    <name>KothPlate</name>
-    <description>Simple Paper King of the Hill pressure plate reward plugin.</description>
+    <name>KingOfTheHill</name>
+    <description>Paper King of the Hill pressure plate reward plugin.</description>
 
     <properties>
         <java.version>17</java.version>

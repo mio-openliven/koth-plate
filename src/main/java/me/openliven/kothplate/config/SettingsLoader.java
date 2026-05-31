@@ -27,11 +27,13 @@ public final class SettingsLoader {
         String language = config.getString("settings.language", "ru");
         int captureSeconds = Math.max(1, config.getInt("settings.capture-time", 20));
         double rewardAmount = Math.max(0.0D, config.getDouble("settings.reward-amount", 25.0D));
+        boolean respectCancelledPhysicalEvents = config.getBoolean("settings.respect-cancelled-physical-events", false);
 
         return new PluginSettings(
                 language == null || language.isBlank() ? "ru" : language.toLowerCase(),
                 captureSeconds,
                 rewardAmount,
+                respectCancelledPhysicalEvents,
                 loadSchedule(config),
                 loadPlatePosition(config)
         );

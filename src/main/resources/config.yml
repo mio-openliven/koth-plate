@@ -12,6 +12,10 @@ settings:
   # Vault economy reward.
   reward-amount: 25.0
 
+  # If false, the KoTH point still starts when another plugin cancels pressure
+  # plate physics. This is safer for protected spawn/arena regions.
+  respect-cancelled-physical-events: false
+
   # Optional daily schedule. When disabled, the point works all the time.
   schedule:
     enabled: false
