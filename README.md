@@ -27,7 +27,7 @@ Permission: `koth.admin` (default: op)
 .\mvnw.cmd package
 ```
 
-The plugin jar will be created in `target/king-of-the-hill-1.0.3.jar`.
+The plugin jar will be created in `target/king-of-the-hill-1.0.5-SNAPSHOT.jar`.
 
 ## Configuration
 
@@ -35,6 +35,7 @@ The plugin jar will be created in `target/king-of-the-hill-1.0.3.jar`.
 settings:
   language: ru
   capture-time: 20
+  visual-hold-buffer-seconds: 1
   reward-amount: 25.0
   respect-cancelled-physical-events: false
   schedule:

@@ -9,6 +9,8 @@ commands:
   koth:
     description: Manage the King of the Hill capture point.
     usage: /koth <set|reload|info>
+    permission: koth.admin
+    permission-message: '§c[§6КотХ§c] У вас нет прав на выполнение этой команды!'
     aliases:
       - kothplate
 permissions:

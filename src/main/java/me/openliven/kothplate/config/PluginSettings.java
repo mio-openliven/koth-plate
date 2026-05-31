@@ -6,8 +6,10 @@ import me.openliven.kothplate.schedule.ScheduleSettings;
 public record PluginSettings(
         String language,
         int captureSeconds,
+        int visualHoldBufferSeconds,
         double rewardAmount,
         boolean respectCancelledPhysicalEvents,
+        VisualSettings visuals,
         ScheduleSettings schedule,
         BlockPosition platePosition
 ) {

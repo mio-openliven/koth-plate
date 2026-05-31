@@ -3,6 +3,7 @@ package me.openliven.kothplate.config;
 import me.openliven.kothplate.model.BlockPosition;
 import me.openliven.kothplate.schedule.ScheduleSettings;
 import me.openliven.kothplate.schedule.TimeWindow;
+import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.time.DateTimeException;
@@ -17,6 +18,7 @@ import java.util.function.Consumer;
 public final class SettingsParser {
     private static final String DEFAULT_LANGUAGE = "ru";
     private static final int DEFAULT_CAPTURE_SECONDS = 20;
+    private static final int DEFAULT_VISUAL_HOLD_BUFFER_SECONDS = 1;
     private static final double DEFAULT_REWARD_AMOUNT = 25.0D;
 
     public PluginSettings parse(ConfigurationSection config, Consumer<String> warningSink) {
@@ -25,6 +27,12 @@ public final class SettingsParser {
                 config.getInt("settings.capture-time", DEFAULT_CAPTURE_SECONDS),
                 DEFAULT_CAPTURE_SECONDS,
                 "settings.capture-time",
+                warningSink
+        );
+        int visualHoldBufferSeconds = nonNegativeInt(
+                config.getInt("settings.visual-hold-buffer-seconds", DEFAULT_VISUAL_HOLD_BUFFER_SECONDS),
+                DEFAULT_VISUAL_HOLD_BUFFER_SECONDS,
+                "settings.visual-hold-buffer-seconds",
                 warningSink
         );
         double rewardAmount = positiveDouble(
@@ -38,8 +46,10 @@ public final class SettingsParser {
         return new PluginSettings(
                 language,
                 captureSeconds,
+                visualHoldBufferSeconds,
                 rewardAmount,
                 respectCancelledPhysicalEvents,
+                loadVisuals(config, warningSink),
                 loadSchedule(config, warningSink),
                 loadPlatePosition(config)
         );
@@ -61,6 +71,14 @@ public final class SettingsParser {
 
     private int positiveInt(int value, int fallback, String path, Consumer<String> warningSink) {
         if (value > 0) {
+            return value;
+        }
+        warningSink.accept("Invalid " + path + " '" + value + "'. Falling back to " + fallback + ".");
+        return fallback;
+    }
+
+    private int nonNegativeInt(int value, int fallback, String path, Consumer<String> warningSink) {
+        if (value >= 0) {
             return value;
         }
         warningSink.accept("Invalid " + path + " '" + value + "'. Falling back to " + fallback + ".");
@@ -100,6 +118,88 @@ public final class SettingsParser {
         }
 
         return new ScheduleSettings(enabled, zone, List.copyOf(windows));
+    }
+
+    private VisualSettings loadVisuals(ConfigurationSection config, Consumer<String> warningSink) {
+        return new VisualSettings(
+                loadVisualEffect(
+                        config,
+                        "settings.visuals.success",
+                        Particle.VILLAGER_HAPPY,
+                        28,
+                        0.6D,
+                        0.9D,
+                        0.6D,
+                        0.05D,
+                        warningSink
+                ),
+                loadVisualEffect(
+                        config,
+                        "settings.visuals.fail",
+                        Particle.SMOKE_NORMAL,
+                        18,
+                        0.45D,
+                        0.45D,
+                        0.45D,
+                        0.02D,
+                        warningSink
+                )
+        );
+    }
+
+    private VisualEffectSettings loadVisualEffect(
+            ConfigurationSection config,
+            String path,
+            Particle defaultParticle,
+            int defaultCount,
+            double defaultOffsetX,
+            double defaultOffsetY,
+            double defaultOffsetZ,
+            double defaultSpeed,
+            Consumer<String> warningSink
+    ) {
+        boolean enabled = config.getBoolean(path + ".enabled", true);
+        Particle particle = loadParticle(config.getString(path + ".particle", defaultParticle.name()), defaultParticle, path + ".particle", warningSink);
+        int count = positiveInt(config.getInt(path + ".count", defaultCount), defaultCount, path + ".count", warningSink);
+        double offsetX = nonNegativeDouble(config.getDouble(path + ".offset-x", defaultOffsetX), defaultOffsetX, path + ".offset-x", warningSink);
+        double offsetY = nonNegativeDouble(config.getDouble(path + ".offset-y", defaultOffsetY), defaultOffsetY, path + ".offset-y", warningSink);
+        double offsetZ = nonNegativeDouble(config.getDouble(path + ".offset-z", defaultOffsetZ), defaultOffsetZ, path + ".offset-z", warningSink);
+        double speed = nonNegativeDouble(config.getDouble(path + ".speed", defaultSpeed), defaultSpeed, path + ".speed", warningSink);
+        return new VisualEffectSettings(enabled, particle, count, offsetX, offsetY, offsetZ, speed);
+    }
+
+    private Particle loadParticle(String name, Particle fallback, String path, Consumer<String> warningSink) {
+        if (name == null || name.isBlank()) {
+            warningSink.accept("Invalid " + path + " '" + name + "'. Falling back to " + fallback.name() + ".");
+            return fallback;
+        }
+
+        String normalized = name.toUpperCase(Locale.ROOT);
+        if (normalized.equals("HAPPY_VILLAGER")) {
+            normalized = "VILLAGER_HAPPY";
+        } else if (normalized.equals("SMOKE")) {
+            normalized = "SMOKE_NORMAL";
+        }
+
+        try {
+            Particle particle = Particle.valueOf(normalized);
+            if (particle.getDataType() != Void.class) {
+                warningSink.accept("Particle " + path + " '" + name + "' requires extra data. Falling back to " + fallback.name() + ".");
+                return fallback;
+            }
+            return particle;
+        } catch (IllegalArgumentException exception) {
+            warningSink.accept("Invalid " + path + " '" + name + "'. Falling back to " + fallback.name() + ".");
+            return fallback;
+        }
+    }
+
+    private double nonNegativeDouble(double value, double fallback, String path, Consumer<String> warningSink) {
+        if (value >= 0.0D) {
+            return value;
+        }
+        warningSink.accept("Invalid " + path + " '" + value + "'. Falling back to " + fallback + ".");
+        return fallback;
     }
 
     private ZoneId loadZone(String timezone, Consumer<String> warningSink) {

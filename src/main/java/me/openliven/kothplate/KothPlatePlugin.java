@@ -7,6 +7,7 @@ import me.openliven.kothplate.config.PluginSettings;
 import me.openliven.kothplate.config.SettingsLoader;
 import me.openliven.kothplate.plate.PlateService;
 import me.openliven.kothplate.service.MessageService;
+import me.openliven.kothplate.service.VisualEffectService;
 import me.openliven.kothplate.service.VaultEconomyService;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -39,7 +40,7 @@ public final class KothPlatePlugin extends JavaPlugin {
         settings = settingsLoader.load();
         messages.load(settings.language());
         plates = new PlateService();
-        captures = new CaptureService(this, new VaultEconomyService(economy), messages, plates, Clock.systemUTC());
+        captures = new CaptureService(this, new VaultEconomyService(economy), messages, new VisualEffectService(getLogger()), plates, Clock.systemUTC());
         captures.updateSettings(settings);
 
         KothPlateCommand commandHandler = new KothPlateCommand(this);

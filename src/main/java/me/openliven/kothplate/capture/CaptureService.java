@@ -6,6 +6,7 @@ import me.openliven.kothplate.schedule.ScheduleService;
 import me.openliven.kothplate.service.EconomyDepositResult;
 import me.openliven.kothplate.service.EconomyService;
 import me.openliven.kothplate.service.MessageService;
+import me.openliven.kothplate.service.VisualEffectService;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -23,6 +24,7 @@ public final class CaptureService {
     private final JavaPlugin plugin;
     private final EconomyService economy;
     private final MessageService messages;
+    private final VisualEffectService visuals;
     private final PlateService plates;
     private final Clock clock;
     private final CaptureProgress progress = new CaptureProgress();
@@ -33,10 +35,11 @@ public final class CaptureService {
     private BukkitTask activeTask;
     private final Map<UUID, Long> lastCancelNoticeAt = new HashMap<>();
 
-    public CaptureService(JavaPlugin plugin, EconomyService economy, MessageService messages, PlateService plates, Clock clock) {
+    public CaptureService(JavaPlugin plugin, EconomyService economy, MessageService messages, VisualEffectService visuals, PlateService plates, Clock clock) {
         this.plugin = plugin;
         this.economy = economy;
         this.messages = messages;
+        this.visuals = visuals;
         this.plates = plates;
         this.clock = clock;
     }
@@ -101,6 +104,7 @@ public final class CaptureService {
                 player.sendActionBar(Component.empty());
             }
             if (notify && player != null && player.isOnline() && canSendCancelNotice(cancelledPlayerId)) {
+                visuals.play(player, settings.visuals().fail());
                 messages.send(player, "capture-cancelled");
             }
         }
@@ -128,7 +132,7 @@ public final class CaptureService {
             return;
         }
 
-        CaptureProgress.CaptureTick tick = progress.tick(playerId, settings.captureSeconds());
+        CaptureProgress.CaptureTick tick = progress.tick(playerId, settings.captureSeconds(), settings.visualHoldBufferSeconds());
         messages.action(player, "actionbar-timer", "%time%", Integer.toString(tick.displayedSeconds()));
 
         if (tick.completed()) {
@@ -139,6 +143,7 @@ public final class CaptureService {
                 cancelActiveCapture(false, player);
                 return;
             }
+            visuals.play(player, settings.visuals().success());
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
             messages.send(player, "reward-given",
                     "%time%", Integer.toString(settings.captureSeconds()),

@@ -1,28 +1,78 @@
-# ==========================================
-# KingOfTheHill settings
-# ==========================================
+# ============================================================
+# KingOfTheHill
+# A compact Paper 1.20.1 "King of the Hill" point plugin.
+#
+# Author: Li2Fox
+# Built quickly, tested carefully: most of the time went into
+# checks, local server runs, and edge-case fixes.
+#
+# Dependencies:
+# - Vault
+# - A Vault economy provider, for example EssentialsX Economy
+#
+# Commands:
+# - /koth set     creates or moves the capture plate
+# - /koth reload  reloads config.yml and language files
+# - /koth info    shows point diagnostics
+# ============================================================
 
 settings:
-  # Message file: ru or en. Default language is Russian.
+  # Message file: ru or en.
+  # Default: ru
   language: ru
 
-  # Hold time in seconds.
+  # How many real seconds the player must hold the plate.
+  # Default: 20
   capture-time: 20
 
-  # Vault economy reward.
+  # Extra visual-only seconds shown before each hold cycle.
+  # With capture-time: 20 and visual-hold-buffer-seconds: 1,
+  # the player sees 21, then 20...1, and the reward lands after 20 real seconds.
+  # Set to 0 if you want the old direct countdown.
+  # Default: 1
+  visual-hold-buffer-seconds: 1
+
+  # Vault economy reward paid after each successful hold.
+  # Default: 25.0
   reward-amount: 25.0
 
   # If false, the KoTH point still starts when another plugin cancels pressure
   # plate physics. This is safer for protected spawn/arena regions.
+  # If true, cancelled pressure-plate events are ignored by KoTH.
+  # Default: false
   respect-cancelled-physical-events: false
 
   # Optional daily schedule. When disabled, the point works all the time.
+  # Time format is HH:mm in the configured timezone.
+  # Windows can cross midnight, for example start: '22:00', end: '02:00'.
   schedule:
     enabled: false
     timezone: Europe/Berlin
     windows:
       - start: '18:00'
         end: '23:00'
+
+  visuals:
+    success:
+      # Particles played around the player after a successful capture.
+      enabled: true
+      particle: VILLAGER_HAPPY
+      count: 28
+      offset-x: 0.6
+      offset-y: 0.9
+      offset-z: 0.6
+      speed: 0.05
+
+    fail:
+      # Particles played when a started capture breaks: pushed off, left the plate,
+      # died, quit, switched to Creative/Spectator, or schedule became inactive.
+      enabled: true
+      particle: SMOKE_NORMAL
+      count: 18
+      offset-x: 0.45
+      offset-y: 0.45
+      offset-z: 0.45
+      speed: 0.02
 
 # This section is overwritten automatically by /koth set.
 zone:
