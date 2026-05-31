@@ -1,0 +1,132 @@
+package me.openliven.kothplate.capture;
+
+import me.openliven.kothplate.config.PluginSettings;
+import me.openliven.kothplate.plate.PlateService;
+import me.openliven.kothplate.schedule.ScheduleService;
+import me.openliven.kothplate.service.EconomyService;
+import me.openliven.kothplate.service.MessageService;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.time.Clock;
+import java.util.UUID;
+
+public final class CaptureService {
+    private final JavaPlugin plugin;
+    private final EconomyService economy;
+    private final MessageService messages;
+    private final PlateService plates;
+    private final Clock clock;
+    private final CaptureProgress progress = new CaptureProgress();
+
+    private PluginSettings settings;
+    private ScheduleService schedule;
+    private UUID activePlayerId;
+    private BukkitTask activeTask;
+
+    public CaptureService(JavaPlugin plugin, EconomyService economy, MessageService messages, PlateService plates, Clock clock) {
+        this.plugin = plugin;
+        this.economy = economy;
+        this.messages = messages;
+        this.plates = plates;
+        this.clock = clock;
+    }
+
+    public void updateSettings(PluginSettings settings) {
+        this.settings = settings;
+        this.schedule = new ScheduleService(settings.schedule(), clock);
+        cancelActiveCapture(false);
+    }
+
+    public void tryStart(Player player) {
+        if (settings == null || settings.platePosition() == null || activePlayerId != null) {
+            return;
+        }
+
+        if (!schedule.isActiveNow()) {
+            messages.action(player, "actionbar-inactive");
+            return;
+        }
+
+        if (!plates.isStandingOnPlate(player, settings.platePosition())) {
+            return;
+        }
+
+        activePlayerId = player.getUniqueId();
+        progress.reset(settings.captureSeconds());
+        activeTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> tickActiveCapture(activePlayerId), 0L, 20L);
+    }
+
+    public void cancelIfActive(UUID playerId, boolean notify) {
+        if (activePlayerId != null && activePlayerId.equals(playerId)) {
+            cancelActiveCapture(notify);
+        }
+    }
+
+    public void cancelActiveCapture(boolean notify) {
+        UUID cancelledPlayerId = activePlayerId;
+        if (activeTask != null) {
+            activeTask.cancel();
+            activeTask = null;
+        }
+        activePlayerId = null;
+        progress.reset(settings == null ? 20 : settings.captureSeconds());
+
+        if (notify && cancelledPlayerId != null) {
+            Player player = Bukkit.getPlayer(cancelledPlayerId);
+            if (player != null) {
+                messages.send(player, "capture-cancelled");
+                player.sendActionBar(" ");
+            }
+        }
+    }
+
+    private void tickActiveCapture(UUID playerId) {
+        Player player = Bukkit.getPlayer(playerId);
+        if (player == null || !player.isOnline()) {
+            cancelActiveCapture(false);
+            return;
+        }
+
+        if (!canContinueCapture(player)) {
+            cancelActiveCapture(true);
+            return;
+        }
+
+        CaptureProgress.CaptureTick tick = progress.tick(playerId, settings.captureSeconds());
+        messages.action(player, "actionbar-timer", "%time%", Integer.toString(tick.displayedSeconds()));
+
+        if (tick.completed()) {
+            economy.deposit(player, settings.rewardAmount());
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+            messages.send(player, "reward-given",
+                    "%time%", Integer.toString(settings.captureSeconds()),
+                    "%reward%", formatAmount(settings.rewardAmount()));
+            progress.reset(settings.captureSeconds());
+        }
+    }
+
+    private boolean canContinueCapture(Player player) {
+        if (player.isDead()) {
+            return false;
+        }
+        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+            return false;
+        }
+        if (!schedule.isActiveNow()) {
+            return false;
+        }
+        return plates.isStandingOnPlate(player, settings.platePosition());
+    }
+
+    private String formatAmount(double amount) {
+        if (amount == Math.rint(amount)) {
+            return Long.toString(Math.round(amount));
+        }
+        return Double.toString(amount);
+    }
+}

@@ -1,0 +1,28 @@
+# ==========================================
+# KingOfTheHill settings
+# ==========================================
+
+settings:
+  # Message file: ru or en. Default language is Russian.
+  language: ru
+
+  # Hold time in seconds.
+  capture-time: 20
+
+  # Vault economy reward.
+  reward-amount: 25.0
+
+  # Optional daily schedule. When disabled, the point works all the time.
+  schedule:
+    enabled: false
+    timezone: Europe/Berlin
+    windows:
+      - start: '18:00'
+        end: '23:00'
+
+# This section is overwritten automatically by /koth set.
+zone:
+  world: ''
+  x: 0
+  y: 64
+  z: 0
