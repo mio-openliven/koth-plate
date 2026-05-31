@@ -15,6 +15,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Clock;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public final class CaptureService {
@@ -29,6 +31,7 @@ public final class CaptureService {
     private ScheduleService schedule;
     private UUID activePlayerId;
     private BukkitTask activeTask;
+    private final Map<UUID, Long> lastCancelNoticeAt = new HashMap<>();
 
     public CaptureService(JavaPlugin plugin, EconomyService economy, MessageService messages, PlateService plates, Clock clock) {
         this.plugin = plugin;
@@ -46,6 +49,10 @@ public final class CaptureService {
 
     public void tryStart(Player player) {
         if (settings == null || settings.platePosition() == null || activePlayerId != null) {
+            return;
+        }
+
+        if (!CaptureEligibility.canCapture(player.getGameMode(), player.isDead())) {
             return;
         }
 
@@ -93,10 +100,20 @@ public final class CaptureService {
             if (player != null && player.isOnline()) {
                 player.sendActionBar(Component.empty());
             }
-            if (notify && player != null && player.isOnline()) {
+            if (notify && player != null && player.isOnline() && canSendCancelNotice(cancelledPlayerId)) {
                 messages.send(player, "capture-cancelled");
             }
         }
+    }
+
+    private boolean canSendCancelNotice(UUID playerId) {
+        long now = System.currentTimeMillis();
+        long lastNoticeAt = lastCancelNoticeAt.getOrDefault(playerId, 0L);
+        if (now - lastNoticeAt < 3000L) {
+            return false;
+        }
+        lastCancelNoticeAt.put(playerId, now);
+        return true;
     }
 
     private void tickActiveCapture(UUID playerId) {
@@ -131,10 +148,7 @@ public final class CaptureService {
     }
 
     private boolean canContinueCapture(Player player) {
-        if (player.isDead()) {
-            return false;
-        }
-        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+        if (!CaptureEligibility.canCapture(player.getGameMode(), player.isDead())) {
             return false;
         }
         if (!schedule.isActiveNow()) {

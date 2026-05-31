@@ -27,7 +27,7 @@ Permission: `koth.admin` (default: op)
 .\mvnw.cmd package
 ```
 
-The plugin jar will be created in `target/king-of-the-hill-1.0.2.jar`.
+The plugin jar will be created in `target/king-of-the-hill-1.0.3.jar`.
 
 ## Configuration
 
