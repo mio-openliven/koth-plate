@@ -53,6 +53,15 @@ settings:
         end: '23:00'
 
   visuals:
+    # Particle names use Bukkit/Paper enum names.
+    # Recommended light no-data particles for Paper 1.20.1:
+    # - success: VILLAGER_HAPPY, HEART, TOTEM, FIREWORKS_SPARK, END_ROD, COMPOSTER
+    # - fail: SMOKE_NORMAL, CLOUD, ASH, CRIT, SPELL_WITCH
+    #
+    # Other particles are not guaranteed by this plugin. Some require extra Paper
+    # data, and some can be visually heavy for players. Invalid or unsupported
+    # particles fall back to the default value, but keep production configs simple.
+    # For stable FPS on busy servers, prefer low count values and avoid spammy effects.
     success:
       # Particles played around the player after a successful capture.
       enabled: true
