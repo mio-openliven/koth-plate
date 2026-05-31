@@ -15,7 +15,7 @@ An admin stands on a block and runs `/koth set`. The plugin places a heavy weigh
 
 - `/koth set` - place the capture plate where you stand
 - `/koth reload` - reload `config.yml`, `ru.yml`, and `en.yml`
-- `/koth info` - show current point settings
+- `/koth info` - show current point settings and diagnostics
 
 Alias: `/kothplate`
 
@@ -27,7 +27,7 @@ Permission: `koth.admin` (default: op)
 .\mvnw.cmd package
 ```
 
-The plugin jar will be created in `target/king-of-the-hill-1.0.1.jar`.
+The plugin jar will be created in `target/king-of-the-hill-1.0.2.jar`.
 
 ## Configuration
 
@@ -46,3 +46,7 @@ settings:
 ```
 
 The plate location is saved automatically after `/koth set`.
+
+## Diagnostics
+
+`/koth info` checks the saved point without scanning all online players. It reports whether the world is loaded, whether the chunk is loaded, whether the configured block is still the correct heavy weighted pressure plate, and whether the schedule is active right now.

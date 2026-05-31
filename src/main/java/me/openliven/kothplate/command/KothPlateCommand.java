@@ -1,13 +1,17 @@
 package me.openliven.kothplate.command;
 
 import me.openliven.kothplate.KothPlatePlugin;
+import me.openliven.kothplate.config.PluginSettings;
 import me.openliven.kothplate.model.BlockPosition;
+import me.openliven.kothplate.plate.PlateDiagnostic;
 import me.openliven.kothplate.plate.PlatePlacementResult;
+import me.openliven.kothplate.schedule.ScheduleService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -86,7 +90,8 @@ public final class KothPlateCommand implements TabExecutor {
     }
 
     private void info(CommandSender sender) {
-        BlockPosition position = plugin.settings().platePosition();
+        PluginSettings settings = plugin.settings();
+        BlockPosition position = settings.platePosition();
         if (position == null) {
             plugin.messages().send(sender, "point-not-set");
             return;
@@ -97,8 +102,18 @@ public final class KothPlateCommand implements TabExecutor {
                 "%x%", Integer.toString(position.x()),
                 "%y%", Integer.toString(position.y()),
                 "%z%", Integer.toString(position.z()),
-                "%time%", Integer.toString(plugin.settings().captureSeconds()),
-                "%reward%", formatAmount(plugin.settings().rewardAmount()));
+                "%time%", Integer.toString(settings.captureSeconds()),
+                "%reward%", formatAmount(settings.rewardAmount()));
+
+        PlateDiagnostic diagnostic = plugin.plates().diagnose(position);
+        plugin.messages().send(sender, "point-status",
+                "%status%", diagnosticLabel(diagnostic.status()),
+                "%block%", diagnostic.blockMaterial().isBlank() ? "-" : diagnostic.blockMaterial());
+
+        ScheduleService schedule = new ScheduleService(settings.schedule(), Clock.systemUTC());
+        plugin.messages().send(sender, "schedule-status",
+                "%enabled%", booleanLabel(settings.schedule().enabled()),
+                "%active%", booleanLabel(schedule.isActiveNow()));
     }
 
     private void savePlate(BlockPosition position) {
@@ -114,5 +129,14 @@ public final class KothPlateCommand implements TabExecutor {
             return Long.toString(Math.round(amount));
         }
         return Double.toString(amount);
+    }
+
+    private String diagnosticLabel(PlateDiagnostic.Status status) {
+        String key = "diagnostic-plate-" + status.name().toLowerCase(Locale.ROOT).replace('_', '-');
+        return plugin.messages().text(key);
+    }
+
+    private String booleanLabel(boolean value) {
+        return plugin.messages().text(value ? "yes" : "no");
     }
 }

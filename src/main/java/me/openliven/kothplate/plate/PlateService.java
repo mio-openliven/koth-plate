@@ -2,21 +2,16 @@ package me.openliven.kothplate.plate;
 
 import me.openliven.kothplate.config.PluginSettings;
 import me.openliven.kothplate.model.BlockPosition;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public final class PlateService {
-    private final JavaPlugin plugin;
     public static final Material CAPTURE_PLATE = Material.HEAVY_WEIGHTED_PRESSURE_PLATE;
-
-    public PlateService(JavaPlugin plugin) {
-        this.plugin = plugin;
-    }
 
     public PlatePlacementResult placeAtPlayerFeet(Player player, PluginSettings settings) {
         Block baseBlock = player.getLocation().clone().subtract(0.0D, 0.1D, 0.0D).getBlock();
@@ -33,46 +28,6 @@ public final class PlateService {
         return new PlatePlacementResult(PlatePlacementResult.Status.SUCCESS, BlockPosition.fromBlock(targetBlock));
     }
 
-    public void clear(BlockPosition position) {
-        if (position == null) {
-            return;
-        }
-
-        Location location = position.toLocation();
-        if (location == null) {
-            plugin.getLogger().warning("Cannot clear plate because world is not loaded: " + position.worldName());
-            return;
-        }
-
-        Block block = location.getBlock();
-        if (isPressurePlate(block.getType())) {
-            block.setType(Material.AIR);
-        }
-    }
-
-    public Player findPlayerOnPlate(BlockPosition position) {
-        if (position == null) {
-            return null;
-        }
-
-        Location location = position.toLocation();
-        if (location == null) {
-            return null;
-        }
-
-        World world = location.getWorld();
-        if (world == null) {
-            return null;
-        }
-
-        for (Player player : world.getPlayers()) {
-            if (isStandingOnPlate(player, position)) {
-                return player;
-            }
-        }
-        return null;
-    }
-
     public boolean isCapturePlate(Block block, BlockPosition position) {
         return position != null
                 && block.getType() == CAPTURE_PLATE
@@ -86,6 +41,30 @@ public final class PlateService {
         Block feetBlock = player.getLocation().getBlock();
         Block slightlyBelowFeet = player.getLocation().clone().subtract(0.0D, 0.1D, 0.0D).getBlock();
         return position.matches(feetBlock) || position.matches(slightlyBelowFeet);
+    }
+
+    public PlateDiagnostic diagnose(BlockPosition position) {
+        if (position == null) {
+            return new PlateDiagnostic(PlateDiagnostic.Status.NOT_CONFIGURED, "");
+        }
+
+        World world = Bukkit.getWorld(position.worldName());
+        if (world == null) {
+            return new PlateDiagnostic(PlateDiagnostic.Status.WORLD_NOT_LOADED, "");
+        }
+
+        int chunkX = position.x() >> 4;
+        int chunkZ = position.z() >> 4;
+        if (!world.isChunkLoaded(chunkX, chunkZ)) {
+            return new PlateDiagnostic(PlateDiagnostic.Status.CHUNK_NOT_LOADED, "");
+        }
+
+        Location location = new Location(world, position.x(), position.y(), position.z());
+        Material material = location.getBlock().getType();
+        if (material == CAPTURE_PLATE) {
+            return new PlateDiagnostic(PlateDiagnostic.Status.READY, material.name());
+        }
+        return new PlateDiagnostic(PlateDiagnostic.Status.WRONG_BLOCK, material.name());
     }
 
     private boolean isPressurePlate(Material material) {

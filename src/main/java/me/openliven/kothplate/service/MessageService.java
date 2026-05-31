@@ -51,6 +51,10 @@ public final class MessageService {
         player.sendActionBar(message(key, replacements));
     }
 
+    public String text(String key, String... replacements) {
+        return rawMessage(key, replacements);
+    }
+
     private Component messageWithPrefix(String key, String... replacements) {
         return message("prefix").append(message(key, replacements));
     }

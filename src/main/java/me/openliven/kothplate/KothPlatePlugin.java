@@ -38,7 +38,7 @@ public final class KothPlatePlugin extends JavaPlugin {
         messages = new MessageService(this);
         settings = settingsLoader.load();
         messages.load(settings.language());
-        plates = new PlateService(this);
+        plates = new PlateService();
         captures = new CaptureService(this, new VaultEconomyService(economy), messages, plates, Clock.systemUTC());
         captures.updateSettings(settings);
 
