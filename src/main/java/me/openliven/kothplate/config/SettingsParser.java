@@ -20,6 +20,7 @@ public final class SettingsParser {
     private static final int DEFAULT_CAPTURE_SECONDS = 20;
     private static final int DEFAULT_VISUAL_HOLD_BUFFER_SECONDS = 1;
     private static final double DEFAULT_REWARD_AMOUNT = 25.0D;
+    private static final int DEFAULT_AFTER_REWARD_MODE = 2;
 
     public PluginSettings parse(ConfigurationSection config, Consumer<String> warningSink) {
         String language = normalizeLanguage(config.getString("settings.language", DEFAULT_LANGUAGE), warningSink);
@@ -49,6 +50,7 @@ public final class SettingsParser {
                 visualHoldBufferSeconds,
                 rewardAmount,
                 respectCancelledPhysicalEvents,
+                loadAfterReward(config, warningSink),
                 loadVisuals(config, warningSink),
                 loadSchedule(config, warningSink),
                 loadPlatePosition(config)
@@ -118,6 +120,16 @@ public final class SettingsParser {
         }
 
         return new ScheduleSettings(enabled, zone, List.copyOf(windows));
+    }
+
+    private AfterRewardSettings loadAfterReward(ConfigurationSection config, Consumer<String> warningSink) {
+        int modeId = config.getInt("settings.after-reward.mode", config.getInt("settings.winner-ejection.mode", DEFAULT_AFTER_REWARD_MODE));
+        AfterRewardMode mode = AfterRewardMode.fromId(modeId);
+        if (mode == null) {
+            warningSink.accept("Invalid settings.after-reward.mode '" + modeId + "'. Falling back to " + DEFAULT_AFTER_REWARD_MODE + ".");
+            mode = AfterRewardMode.EJECT_WINNER;
+        }
+        return new AfterRewardSettings(mode);
     }
 
     private VisualSettings loadVisuals(ConfigurationSection config, Consumer<String> warningSink) {

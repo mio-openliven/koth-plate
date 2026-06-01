@@ -9,6 +9,7 @@ import me.openliven.kothplate.plate.PlateService;
 import me.openliven.kothplate.service.MessageService;
 import me.openliven.kothplate.service.VisualEffectService;
 import me.openliven.kothplate.service.VaultEconomyService;
+import me.openliven.kothplate.service.AfterRewardActionService;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
@@ -40,7 +41,15 @@ public final class KothPlatePlugin extends JavaPlugin {
         settings = settingsLoader.load();
         messages.load(settings.language());
         plates = new PlateService();
-        captures = new CaptureService(this, new VaultEconomyService(economy), messages, new VisualEffectService(getLogger()), plates, Clock.systemUTC());
+        captures = new CaptureService(
+                this,
+                new VaultEconomyService(economy),
+                messages,
+                new VisualEffectService(getLogger()),
+                new AfterRewardActionService(),
+                plates,
+                Clock.systemUTC()
+        );
         captures.updateSettings(settings);
 
         KothPlateCommand commandHandler = new KothPlateCommand(this);

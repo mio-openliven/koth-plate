@@ -7,6 +7,7 @@ import me.openliven.kothplate.service.EconomyDepositResult;
 import me.openliven.kothplate.service.EconomyService;
 import me.openliven.kothplate.service.MessageService;
 import me.openliven.kothplate.service.VisualEffectService;
+import me.openliven.kothplate.service.AfterRewardActionService;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -25,6 +26,7 @@ public final class CaptureService {
     private final EconomyService economy;
     private final MessageService messages;
     private final VisualEffectService visuals;
+    private final AfterRewardActionService afterRewardActions;
     private final PlateService plates;
     private final Clock clock;
     private final CaptureProgress progress = new CaptureProgress();
@@ -35,11 +37,20 @@ public final class CaptureService {
     private BukkitTask activeTask;
     private final Map<UUID, Long> lastCancelNoticeAt = new HashMap<>();
 
-    public CaptureService(JavaPlugin plugin, EconomyService economy, MessageService messages, VisualEffectService visuals, PlateService plates, Clock clock) {
+    public CaptureService(
+            JavaPlugin plugin,
+            EconomyService economy,
+            MessageService messages,
+            VisualEffectService visuals,
+            AfterRewardActionService afterRewardActions,
+            PlateService plates,
+            Clock clock
+    ) {
         this.plugin = plugin;
         this.economy = economy;
         this.messages = messages;
         this.visuals = visuals;
+        this.afterRewardActions = afterRewardActions;
         this.plates = plates;
         this.clock = clock;
     }
@@ -148,7 +159,12 @@ public final class CaptureService {
             messages.send(player, "reward-given",
                     "%time%", Integer.toString(settings.captureSeconds()),
                     "%reward%", formatAmount(settings.rewardAmount()));
-            progress.reset(settings.captureSeconds());
+            if (settings.afterReward().enabled()) {
+                afterRewardActions.apply(player, settings.afterReward(), settings.platePosition());
+                cancelActiveCapture(false, player);
+            } else {
+                progress.reset(settings.captureSeconds());
+            }
         }
     }
 

@@ -9,6 +9,7 @@ public record PluginSettings(
         int visualHoldBufferSeconds,
         double rewardAmount,
         boolean respectCancelledPhysicalEvents,
+        AfterRewardSettings afterReward,
         VisualSettings visuals,
         ScheduleSettings schedule,
         BlockPosition platePosition

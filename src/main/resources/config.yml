@@ -42,6 +42,27 @@ settings:
   # Default: false
   respect-cancelled-physical-events: false
 
+  # What happens right after a successful reward.
+  # Choose mode: 0, 1, or 2.
+  #
+  # 0 - off:
+  #     Do not move the winner. Old behavior: if the player keeps standing
+  #     on the plate, the next hold cycle can start again.
+  #
+  # 1 - mini air burst:
+  #     A small air-burst effect on the plate at the exact moment the reward
+  #     is paid. It also gives the winner a tiny sideways nudge, with no
+  #     upward launch.
+  #
+  # 2 - eject winner:
+  #     Stronger sideways push away from the point after payout. No upward
+  #     launch. This is the default for active KoTH gameplay, so the next
+  #     player can contest the plate.
+  #
+  # Invalid values fall back to 2.
+  after-reward:
+    mode: 2
+
   # Optional daily schedule. When disabled, the point works all the time.
   # Time format is HH:mm in the configured timezone.
   # Windows can cross midnight, for example start: '22:00', end: '02:00'.

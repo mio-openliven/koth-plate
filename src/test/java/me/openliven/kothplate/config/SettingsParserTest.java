@@ -25,6 +25,7 @@ class SettingsParserTest {
         config.set("settings.visual-hold-buffer-seconds", 2);
         config.set("settings.reward-amount", 75.5D);
         config.set("settings.respect-cancelled-physical-events", true);
+        config.set("settings.after-reward.mode", 1);
         config.set("settings.visuals.success.particle", "TOTEM");
         config.set("settings.visuals.fail.enabled", false);
         config.set("settings.schedule.enabled", true);
@@ -43,6 +44,7 @@ class SettingsParserTest {
         assertEquals(2, settings.visualHoldBufferSeconds());
         assertEquals(75.5D, settings.rewardAmount());
         assertTrue(settings.respectCancelledPhysicalEvents());
+        assertEquals(AfterRewardMode.MINI_AIR_BURST, settings.afterReward().mode());
         assertTrue(settings.visuals().success().enabled());
         assertEquals(org.bukkit.Particle.TOTEM, settings.visuals().success().particle());
         assertFalse(settings.visuals().fail().enabled());
@@ -98,7 +100,20 @@ class SettingsParserTest {
         assertEquals(20, settings.captureSeconds());
         assertEquals(1, settings.visualHoldBufferSeconds());
         assertEquals(25.0D, settings.rewardAmount());
+        assertEquals(AfterRewardMode.EJECT_WINNER, settings.afterReward().mode());
         assertFalse(settings.schedule().enabled());
+    }
+
+    @Test
+    void fallsBackFromInvalidAfterRewardMode() {
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("settings.after-reward.mode", 7);
+
+        List<String> warnings = new ArrayList<>();
+        PluginSettings settings = parser.parse(config, warnings::add);
+
+        assertEquals(AfterRewardMode.EJECT_WINNER, settings.afterReward().mode());
+        assertEquals(1, warnings.size());
     }
 
     @Test
