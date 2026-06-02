@@ -10,6 +10,13 @@ An admin stands on a block and runs `/koth set`. The plugin places a heavy weigh
 
 When a player holds the plate for the configured time without leaving, dying, quitting, or switching to Creative/Spectator, they receive an economy reward through Vault. If they keep standing on the plate, the timer can start again.
 
+## Project Status
+
+- **Useful now:** yes, for small servers that need one simple capture point.
+- **Finished product:** feature-complete MVP, not a large multi-arena KOTH suite.
+- **Main risks:** economy-provider setup, server-version assumptions, and manual balance tuning.
+- **If needed:** it can be extended with multiple points, scoreboards, seasons, or richer rewards.
+
 ## Features
 
 - One capture point configured in-game.
@@ -73,10 +80,6 @@ The plate location is saved automatically after `/koth set`.
 ## Diagnostics
 
 `/koth info` checks the saved point without scanning all online players. It reports whether the world is loaded, whether the chunk is loaded, whether the configured block is still the correct heavy weighted pressure plate, and whether the schedule is active right now.
-
-## Project Status
-
-Learning MVP, but intended to be usable. The scope is deliberately small: one point, clear rules, simple configuration, and no large framework around it.
 
 ## Author Note
 
